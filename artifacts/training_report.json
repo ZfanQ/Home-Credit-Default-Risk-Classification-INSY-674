@@ -1,9 +1,66 @@
 {
   "artifact_path": "artifacts/model_bundle.joblib",
-  "validation_auc": 0.7880575610867213,
+  "validation_auc": 0.7892691551960686,
+  "train_auc": 0.8936322764934962,
   "scale_pos_weight": 11.38710976837865,
   "feature_count": 450,
   "train_rows": 246008,
   "valid_rows": 61503,
-  "trained_at_utc": "2026-02-19T20:31:37.476230+00:00"
+  "trained_at_utc": "2026-02-20T01:00:36.748488+00:00",
+  "dataset_size": {
+    "rows": 307511,
+    "columns": 452
+  },
+  "class_distribution": {
+    "positive_count": 24825,
+    "negative_count": 282686,
+    "positive_rate": 0.08072881945686496,
+    "negative_rate": 0.9192711805431351
+  },
+  "split_counts": {
+    "train_rows": 246008,
+    "valid_rows": 61503,
+    "train_positive_count": 19860,
+    "train_negative_count": 226148,
+    "valid_positive_count": 4965,
+    "valid_negative_count": 56538
+  },
+  "hyperparameters": {
+    "objective": "binary",
+    "n_estimators": 3000,
+    "learning_rate": 0.025,
+    "num_leaves": 48,
+    "min_child_samples": 70,
+    "subsample": 0.9,
+    "colsample_bytree": 0.8,
+    "reg_alpha": 0.05,
+    "reg_lambda": 0.8,
+    "max_depth": 12,
+    "random_state": 42,
+    "n_jobs": -1,
+    "metric": "auc",
+    "verbosity": -1,
+    "scale_pos_weight": 11.38710976837865,
+    "importance_type": "gain"
+  },
+  "random_seed": 42,
+  "threshold_used": 0.5,
+  "roc_auc": {
+    "train": 0.8936322764934962,
+    "validation": 0.7892691551960686
+  },
+  "dependency_snapshot": {
+    "python_version": "3.12.7",
+    "packages": {
+      "fastapi": "0.129.0",
+      "uvicorn": "0.41.0",
+      "pydantic-settings": "2.13.1",
+      "pandas": "3.0.1",
+      "numpy": "2.4.2",
+      "scikit-learn": "1.8.0",
+      "lightgbm": "4.6.0",
+      "joblib": "1.5.3"
+    }
+  },
+  "report_generated_at_utc": "2026-02-20T01:00:36.823553+00:00"
 }

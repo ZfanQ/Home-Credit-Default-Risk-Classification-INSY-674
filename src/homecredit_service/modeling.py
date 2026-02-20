@@ -18,9 +18,9 @@ MISSING_TOKEN = "__MISSING__"
 
 
 def split_feature_types(feature_df: pd.DataFrame) -> tuple[list[str], list[str]]:
-    categorical_columns = (
-        feature_df.select_dtypes(include=["object", "string", "category", "bool"]).columns.tolist()
-    )
+    categorical_columns = feature_df.select_dtypes(
+        include=["object", "string", "category", "bool"]
+    ).columns.tolist()
     numeric_columns = [column for column in feature_df.columns if column not in categorical_columns]
     return categorical_columns, numeric_columns
 
@@ -100,9 +100,17 @@ def train_lightgbm_model(
     train_df: pd.DataFrame,
     random_state: int = 42,
     valid_size: float = 0.2,
+    prediction_threshold: float = 0.5,
 ) -> dict[str, Any]:
     y = train_df[TARGET_COLUMN].astype("int32")
     X = train_df.drop(columns=[TARGET_COLUMN, ID_COLUMN], errors="ignore")
+
+    dataset_rows = len(train_df)
+    dataset_columns = int(train_df.shape[1])
+    positive_count = int(y.sum())
+    negative_count = int(len(y) - positive_count)
+    positive_rate = float(positive_count / len(y)) if len(y) > 0 else 0.0
+    negative_rate = float(1.0 - positive_rate)
 
     categorical_columns, numeric_columns = split_feature_types(X)
     X_train_raw, X_valid_raw, y_train, y_valid = train_test_split(
@@ -121,23 +129,26 @@ def train_lightgbm_model(
     negatives = float(len(y_train) - positives)
     scale_pos_weight = negatives / positives if positives > 0 else 1.0
 
-    model = LGBMClassifier(
-        objective="binary",
-        n_estimators=2500,
-        learning_rate=0.03,
-        num_leaves=64,
-        min_child_samples=50,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        reg_alpha=0.1,
-        reg_lambda=1.0,
-        random_state=random_state,
-        n_jobs=-1,
-        metric="auc",
-        verbosity=-1,
-        scale_pos_weight=scale_pos_weight,
-        importance_type="gain",
-    )
+    hyperparameters: dict[str, Any] = {
+        "objective": "binary",
+        "n_estimators": 3000,
+        "learning_rate": 0.025,
+        "num_leaves": 48,
+        "min_child_samples": 70,
+        "subsample": 0.9,
+        "colsample_bytree": 0.8,
+        "reg_alpha": 0.05,
+        "reg_lambda": 0.8,
+        "max_depth": 12,
+        "random_state": random_state,
+        "n_jobs": -1,
+        "metric": "auc",
+        "verbosity": -1,
+        "scale_pos_weight": scale_pos_weight,
+        "importance_type": "gain",
+    }
+
+    model = LGBMClassifier(**hyperparameters)
 
     model.fit(
         X_train,
@@ -147,10 +158,17 @@ def train_lightgbm_model(
         callbacks=[early_stopping(120, verbose=False), log_evaluation(0)],
     )
 
+    train_proba = model.predict_proba(X_train)[:, 1]
+    train_auc = float(roc_auc_score(y_train, train_proba))
     valid_proba = model.predict_proba(X_valid)[:, 1]
     valid_auc = float(roc_auc_score(y_valid, valid_proba))
     feature_names = X_train.columns.tolist()
     feature_importance = build_feature_importance(model, feature_names)
+
+    train_positive_count = int(y_train.sum())
+    train_negative_count = int(len(y_train) - train_positive_count)
+    valid_positive_count = int(y_valid.sum())
+    valid_negative_count = int(len(y_valid) - valid_positive_count)
 
     return {
         "model": model,
@@ -158,12 +176,36 @@ def train_lightgbm_model(
         "categorical_columns": categorical_columns,
         "numeric_columns": numeric_columns,
         "feature_columns": feature_names,
-        "metrics": {"validation_auc": valid_auc},
+        "metrics": {
+            "train_auc": train_auc,
+            "validation_auc": valid_auc,
+        },
         "scale_pos_weight": scale_pos_weight,
         "trained_at_utc": datetime.now(UTC).isoformat(),
         "train_rows": len(X_train),
         "valid_rows": len(X_valid),
         "feature_importance": feature_importance,
+        "dataset_summary": {
+            "rows": dataset_rows,
+            "columns": dataset_columns,
+        },
+        "class_distribution": {
+            "positive_count": positive_count,
+            "negative_count": negative_count,
+            "positive_rate": positive_rate,
+            "negative_rate": negative_rate,
+        },
+        "split_counts": {
+            "train_rows": len(X_train),
+            "valid_rows": len(X_valid),
+            "train_positive_count": train_positive_count,
+            "train_negative_count": train_negative_count,
+            "valid_positive_count": valid_positive_count,
+            "valid_negative_count": valid_negative_count,
+        },
+        "hyperparameters": hyperparameters,
+        "random_seed": random_state,
+        "threshold_used": float(prediction_threshold),
     }
 
 

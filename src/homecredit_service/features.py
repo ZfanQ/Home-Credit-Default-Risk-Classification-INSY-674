@@ -8,6 +8,16 @@ import pandas as pd
 
 TARGET_COLUMN = "TARGET"
 ID_COLUMN = "SK_ID_CURR"
+REQUIRED_DATA_FILES = (
+    "application_train.csv",
+    "application_test.csv",
+    "bureau.csv",
+    "bureau_balance.csv",
+    "previous_application.csv",
+    "POS_CASH_balance.csv",
+    "installments_payments.csv",
+    "credit_card_balance.csv",
+)
 
 
 def safe_divide(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
@@ -37,6 +47,18 @@ def downcast_numeric(df: pd.DataFrame) -> pd.DataFrame:
 def read_csv(path: Path, usecols: list[str] | None = None) -> pd.DataFrame:
     df = pd.read_csv(path, usecols=usecols, low_memory=False)
     return downcast_numeric(df)
+
+
+def validate_data_dir(data_dir: Path) -> None:
+    if not data_dir.exists():
+        msg = f"Data directory does not exist: {data_dir}"
+        raise FileNotFoundError(msg)
+
+    missing_files = [name for name in REQUIRED_DATA_FILES if not (data_dir / name).exists()]
+    if missing_files:
+        missing = ", ".join(missing_files)
+        msg = f"Missing required data files in {data_dir}: {missing}"
+        raise FileNotFoundError(msg)
 
 
 def aggregate_numeric(
@@ -125,6 +147,7 @@ def build_training_frame(
     sample_size: int | None = None,
     random_state: int = 42,
 ) -> pd.DataFrame:
+    validate_data_dir(data_dir)
     application_train = enrich_application_features(read_csv(data_dir / "application_train.csv"))
 
     if sample_size is not None and sample_size < len(application_train):

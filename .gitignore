@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual env and local caches
+.venv/
+.uv-cache/
+.pytest_cache/
+.ruff_cache/
+
+# Large raw datasets (do not commit)
+homecreditdefaultriskdata/
+
+# Large trained artifacts (keep reports, skip model binaries)
+artifacts/*.joblib
+

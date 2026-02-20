@@ -23,6 +23,15 @@ This project provides a production-ready FastAPI service for **Home Credit Defau
 - `homecreditdefaultriskdata/`: required raw CSV inputs.
 - `artifacts/`: trained model outputs.
 
+## Presentation Framework Docs
+- `BUSINESS_CONTEXT.md`: business framing, quantified objective, and financial impact estimate.
+- `HYPOTHESIS.md`: statistical hypotheses, error types, and threshold logic.
+- `DATA_REPORT.md`: data sources, aggregation, missingness, and class imbalance profile.
+- `RESULTS.md`: model performance summary and decision-policy interpretation.
+- `VALIDATION.md`: metric justification, baseline comparison, overfitting checks, CV discussion.
+- `EXPLAINABILITY.md`: global and local model explainability coverage.
+- `LIMITATIONS.md`: assumptions, threats to validity, and reproducibility limits.
+
 ## Prerequisites
 - Python `3.11` (project pins `>=3.11,<3.13`).
 - `uv` installed.
@@ -104,6 +113,13 @@ uv run train-homecredit --data-dir homecreditdefaultriskdata --artifact-dir arti
 ```
 What it does: same training flow on a subset for faster iteration.
 
+Optional metadata argument:
+```bash
+uv run train-homecredit --threshold 0.5
+```
+What it does: stores decision-threshold metadata in `training_report.json` (does not change
+training objective).
+
 ## Run API
 1. Start service:
 ```bash
@@ -178,7 +194,8 @@ docker run --rm -p 8000:8000 \
 
 ## Expected Outputs
 - `artifacts/model_bundle.joblib`: trained model + preprocessing bundle.
-- `artifacts/training_report.json`: model metrics and run metadata.
+- `artifacts/training_report.json`: metrics and metadata including class distribution,
+  split counts, hyperparameters, random seed, threshold, and dependency snapshot.
 
 ## Notes
 - Full training is compute and memory intensive.
