@@ -1,0 +1,9 @@
+{
+  "artifact_path": "artifacts/model_bundle.joblib",
+  "validation_auc": 0.7880575610867213,
+  "scale_pos_weight": 11.38710976837865,
+  "feature_count": 450,
+  "train_rows": 246008,
+  "valid_rows": 61503,
+  "trained_at_utc": "2026-02-19T20:31:37.476230+00:00"
+}
