@@ -37,6 +37,10 @@ def test_api_predict_and_metadata(tmp_path: Path) -> None:
         assert health.status_code == 200
         assert health.json()["model_loaded"] is True
 
+        cors = client.get("/health", headers={"Origin": "null"})
+        assert cors.status_code == 200
+        assert cors.headers.get("access-control-allow-origin") == "*"
+
         metadata = client.get("/metadata")
         assert metadata.status_code == 200
         assert 0.0 <= metadata.json()["validation_auc"] <= 1.0

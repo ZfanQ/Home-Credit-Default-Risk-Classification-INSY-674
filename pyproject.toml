@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 train-homecredit = "homecredit_service.train:main"
+run-homecredit-local-app = "homecredit_service.local_app:main"
 
 [dependency-groups]
 dev = [

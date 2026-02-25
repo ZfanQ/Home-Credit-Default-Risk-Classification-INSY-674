@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from homecredit_service.config import get_settings
 from homecredit_service.schemas import (
@@ -38,6 +39,13 @@ def create_app(artifact_path: Path | None = None) -> FastAPI:
         yield
 
     app = FastAPI(title="Home Credit Default Risk API", version="1.0.0", lifespan=lifespan)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     def get_prediction_service() -> PredictionService:
         service = app.state.prediction_service

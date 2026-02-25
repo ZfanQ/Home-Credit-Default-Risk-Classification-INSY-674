@@ -133,6 +133,14 @@ HC_ARTIFACT_PATH=artifacts/model_bundle.joblib uv run uvicorn homecredit_service
 ```
 What it does: overrides model artifact path from environment.
 
+## Run Local Desktop App (No Hosting)
+1. Start local app:
+```bash
+uv run run-homecredit-local-app
+```
+What it does: opens a local desktop UI (Tkinter) that runs model inference directly in-process.
+No FastAPI server is required.
+
 ## API Commands (Examples)
 1. Health check:
 ```bash
