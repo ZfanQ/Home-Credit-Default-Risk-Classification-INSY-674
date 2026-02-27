@@ -96,18 +96,29 @@ make test
 What it does: runs `pytest`.
 
 ## Training Commands
-1. Full training on all rows:
+1. Development training (no test evaluation):
 ```bash
 make train
 ```
 What it does:
 - Loads and aggregates all Home Credit raw tables.
 - Trains LightGBM with AUC metric and class weighting.
+- Uses train/validation split for model selection.
+- Keeps the test split held out and does not compute test metrics.
 - Writes:
   - `artifacts/model_bundle.joblib`
   - `artifacts/training_report.json`
 
-2. Quick smoke training with sampled rows:
+2. Final evaluation run (computes test ROC-AUC):
+```bash
+make final-eval
+```
+What it does:
+- Re-runs training with the same split policy.
+- Evaluates the selected model on the held-out test split.
+- Refuses to overwrite an existing test evaluation unless `--force-test-eval` is passed.
+
+3. Quick smoke training with sampled rows:
 ```bash
 uv run train-homecredit --data-dir homecreditdefaultriskdata --artifact-dir artifacts --sample-size 5000
 ```
@@ -203,7 +214,8 @@ docker run --rm -p 8000:8000 \
 ## Expected Outputs
 - `artifacts/model_bundle.joblib`: trained model + preprocessing bundle.
 - `artifacts/training_report.json`: metrics and metadata including class distribution,
-  split counts, hyperparameters, random seed, threshold, and dependency snapshot.
+  split counts, hyperparameters, random seed, threshold, dependency snapshot, and
+  `test_evaluated` status.
 
 ## Notes
 - Full training is compute and memory intensive.

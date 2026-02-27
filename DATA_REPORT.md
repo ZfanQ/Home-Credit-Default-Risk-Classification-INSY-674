@@ -24,6 +24,10 @@ All raw CSV files are loaded from the configured data directory
   - `DAYS_EMPLOYED_PCT`
 - Auxiliary tables are aggregated by `SK_ID_CURR` using:
   - `mean`, `max`, `min`, `sum`, `std`, and row count per source.
+- Temporal leakage guard is applied before aggregation:
+  - only non-future records are kept using relative-time columns such as
+    `DAYS_CREDIT`, `DAYS_DECISION`, `MONTHS_BALANCE`,
+    `DAYS_ENTRY_PAYMENT`, and `DAYS_INSTALMENT` (rows with values `<= 0` or missing).
 - Aggregates are left-joined back to the base applicant table.
 
 ## Missing Value Strategy

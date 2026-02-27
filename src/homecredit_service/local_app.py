@@ -29,7 +29,6 @@ class LocalRiskApp(tk.Tk):
         self.credit_var = tk.StringVar(value="600000")
         self.annuity_var = tk.StringVar(value="26000")
         self.age_var = tk.StringVar(value="35")
-        self.gender_var = tk.StringVar(value="F")
 
         self.decision_var = tk.StringVar(value="Awaiting evaluation")
         self.note_var = tk.StringVar(
@@ -221,24 +220,9 @@ class LocalRiskApp(tk.Tk):
                 row=row, column=1, sticky="ew", padx=20, pady=8
             )
 
-        tk.Label(
-            input_card,
-            text="Applicant Gender",
-            bg=self.palette["panel"],
-            fg=self.palette["text"],
-            font=self.base_font,
-        ).grid(row=5, column=0, sticky="w", padx=20, pady=8)
-        ttk.Combobox(
-            input_card,
-            textvariable=self.gender_var,
-            values=["F", "M"],
-            state="readonly",
-            font=self.base_font,
-        ).grid(row=5, column=1, sticky="ew", padx=20, pady=8)
-
         # Buttons inside input card
         button_frame = tk.Frame(input_card, bg=self.palette["panel"])
-        button_frame.grid(row=6, column=0, columnspan=2, sticky="ew", padx=20, pady=(24, 20))
+        button_frame.grid(row=5, column=0, columnspan=2, sticky="ew", padx=20, pady=(24, 20))
         button_frame.columnconfigure(0, weight=1)
         button_frame.columnconfigure(1, weight=1)
 
@@ -492,12 +476,11 @@ class LocalRiskApp(tk.Tk):
         self.credit_var.set("600000")
         self.annuity_var.set("26000")
         self.age_var.set("35")
-        self.gender_var.set("F")
         self.status_var.set("Sample values applied. Evaluate application.")
 
     def _build_single_record(
         self,
-    ) -> tuple[dict[str, float | int | str], dict[str, float | int]]:
+    ) -> tuple[dict[str, float | int], dict[str, float | int]]:
         try:
             income = float(self.income_var.get())
             credit = float(self.credit_var.get())
@@ -506,10 +489,6 @@ class LocalRiskApp(tk.Tk):
         except ValueError as exc:
             raise ValueError("Applicant fields must be numeric.") from exc
 
-        gender = self.gender_var.get().strip().upper()
-        if gender not in {"F", "M"}:
-            raise ValueError("Gender must be F or M.")
-
         self._validate_single_record(
             income=income,
             credit=credit,
@@ -517,12 +496,11 @@ class LocalRiskApp(tk.Tk):
             age_years=age_years,
         )
 
-        record: dict[str, float | int | str] = {
+        record: dict[str, float | int] = {
             "AMT_INCOME_TOTAL": income,
             "AMT_CREDIT": credit,
             "AMT_ANNUITY": annuity,
             "DAYS_BIRTH": int(-age_years * 365),
-            "CODE_GENDER": gender,
         }
         context = {
             "income": income,
@@ -587,6 +565,7 @@ class LocalRiskApp(tk.Tk):
 
         annual_payment_ratio = (annuity * 12.0) / income
         loan_to_income = credit / income
+        implied_term_months = credit / annuity
 
         if annual_payment_ratio >= 0.50:
             score += 0.25
@@ -594,9 +573,19 @@ class LocalRiskApp(tk.Tk):
         elif annual_payment_ratio >= 0.35:
             score += 0.15
             adjustments.append(("High installment burden", 0.15))
-        elif annual_payment_ratio <= 0.18:
+        elif annual_payment_ratio <= 0.18 and implied_term_months < 120:
             score -= 0.05
             adjustments.append(("Low installment burden", -0.05))
+
+        if implied_term_months >= 240:
+            score += 0.55
+            adjustments.append(("Repayment term appears unrealistic", 0.55))
+        elif implied_term_months >= 120:
+            score += 0.35
+            adjustments.append(("Very long repayment term", 0.35))
+        elif implied_term_months >= 84:
+            score += 0.15
+            adjustments.append(("Long repayment term", 0.15))
 
         if loan_to_income >= 8.0:
             score += 0.25

@@ -16,12 +16,15 @@ class PredictionService:
 
     def metadata(self) -> dict[str, Any]:
         metrics = self.bundle.get("metrics", {})
+        raw_test_auc = metrics.get("test_auc")
         return {
             "trained_at_utc": self.bundle.get("trained_at_utc", ""),
-            "validation_auc": float(metrics.get("validation_auc", 0.0)),
+            "test_auc": float(raw_test_auc) if raw_test_auc is not None else None,
+            "test_evaluated": bool(self.bundle.get("test_evaluated", False)),
             "scale_pos_weight": float(self.bundle.get("scale_pos_weight", 1.0)),
             "train_rows": int(self.bundle.get("train_rows", 0)),
             "valid_rows": int(self.bundle.get("valid_rows", 0)),
+            "test_rows": int(self.bundle.get("test_rows", 0)),
             "feature_count": len(self.bundle.get("feature_columns", [])),
             "categorical_feature_count": len(self.bundle.get("categorical_columns", [])),
         }
@@ -34,7 +37,12 @@ class PredictionService:
         raw_input, transformed = prepare_inference_frame(records, self.bundle)
         model = self.bundle["model"]
 
-        probabilities = model.predict_proba(transformed)[:, 1]
+        proba_or_raw = model.predict_proba(transformed)
+        if isinstance(proba_or_raw, np.ndarray) and proba_or_raw.ndim == 2:
+            probabilities = proba_or_raw[:, 1]
+        else:
+            raw_scores = model.predict(transformed, raw_score=True)
+            probabilities = 1.0 / (1.0 + np.exp(-raw_scores))
         contributions = model.booster_.predict(transformed, pred_contrib=True)
         feature_names = transformed.columns.tolist()
 

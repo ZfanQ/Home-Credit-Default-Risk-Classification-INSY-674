@@ -23,7 +23,7 @@ def build_bundle(tmp_path: Path) -> Path:
             "CODE_GENDER": rng.choice(["M", "F"], size=250),
         }
     )
-    bundle = train_lightgbm_model(frame, random_state=7, valid_size=0.2)
+    bundle = train_lightgbm_model(frame, random_state=7, valid_size=0.2, evaluate_test=True)
     artifact = tmp_path / "model_bundle.joblib"
     save_bundle(bundle, artifact_path=artifact)
     return artifact
@@ -43,7 +43,9 @@ def test_api_predict_and_metadata(tmp_path: Path) -> None:
 
         metadata = client.get("/metadata")
         assert metadata.status_code == 200
-        assert 0.0 <= metadata.json()["validation_auc"] <= 1.0
+        assert metadata.json()["test_evaluated"] is True
+        assert 0.0 <= metadata.json()["test_auc"] <= 1.0
+        assert metadata.json()["test_rows"] > 0
 
         response = client.post(
             "/predict",

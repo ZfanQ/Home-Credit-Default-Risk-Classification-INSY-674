@@ -22,9 +22,10 @@ def test_training_bundle_and_inference_transform() -> None:
         }
     )
 
-    bundle = train_lightgbm_model(train_df, random_state=42, valid_size=0.2)
+    bundle = train_lightgbm_model(train_df, random_state=42, valid_size=0.2, evaluate_test=True)
 
     assert 0.0 <= bundle["metrics"]["validation_auc"] <= 1.0
+    assert 0.0 <= bundle["metrics"]["test_auc"] <= 1.0
     assert bundle["scale_pos_weight"] > 1.0
     assert len(bundle["feature_columns"]) > 0
 
@@ -33,3 +34,24 @@ def test_training_bundle_and_inference_transform() -> None:
 
     assert transformed.shape[0] == 1
     assert transformed.shape[1] == len(bundle["feature_columns"])
+
+
+def test_training_without_final_eval_does_not_compute_test_auc() -> None:
+    rng = np.random.default_rng(123)
+    frame = pd.DataFrame(
+        {
+            "SK_ID_CURR": np.arange(220),
+            "TARGET": rng.binomial(1, 0.08, size=220),
+            "AMT_INCOME_TOTAL": rng.normal(180000, 20000, size=220),
+            "AMT_CREDIT": rng.normal(600000, 50000, size=220),
+            "AMT_ANNUITY": rng.normal(25000, 3000, size=220),
+            "DAYS_BIRTH": -rng.integers(9000, 25000, size=220),
+            "CODE_GENDER": rng.choice(["M", "F"], size=220),
+        }
+    )
+
+    bundle = train_lightgbm_model(frame, random_state=123, valid_size=0.2, evaluate_test=False)
+
+    assert 0.0 <= bundle["metrics"]["validation_auc"] <= 1.0
+    assert "test_auc" not in bundle["metrics"]
+    assert bundle["test_evaluated"] is False

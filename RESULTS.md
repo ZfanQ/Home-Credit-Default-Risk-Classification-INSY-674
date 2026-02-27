@@ -1,9 +1,9 @@
 # Results
 
 ## Current Performance Snapshot
-- Reference validation ROC-AUC: `0.7881` (`artifacts/training_report.json`).
+- Reference test ROC-AUC: `0.7858` (`artifacts/training_report.json`).
 - Baseline random ROC-AUC: `0.5000`.
-- Absolute lift over random: `+0.2881`.
+- Absolute lift over random: `+0.2858`.
 
 ## Operational Interpretation
 - The model provides meaningful risk ranking separation between likely defaulters and likely

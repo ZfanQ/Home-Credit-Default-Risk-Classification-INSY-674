@@ -7,19 +7,21 @@
 
 ## Baseline Comparison
 - Null/random ranking baseline: ROC-AUC = 0.50.
-- Current repository reference (`artifacts/training_report.json`): validation ROC-AUC = 0.7881.
-- Lift over random baseline: `0.7881 - 0.5000 = +0.2881` absolute AUC points.
+- Current repository final reference (`artifacts/training_report.json`): test ROC-AUC = 0.7858.
+- Lift over random baseline: `0.7858 - 0.5000 = +0.2858` absolute AUC points.
 
 ## Overfitting Checks
 Current checks in training pipeline:
-- Stratified train/validation split (`train_test_split(..., stratify=y)`).
+- Stratified train/validation/test split (`train_test_split(..., stratify=y)`).
 - Early stopping on validation AUC.
 - Regularization and subsampling in LightGBM config.
+- Test metric computation is gated to explicit final-evaluation runs.
 
 Recommended report checks after each training run:
 - Compare train ROC-AUC vs validation ROC-AUC.
 - Track delta (`train_auc - validation_auc`) across runs.
 - Flag potential overfit when delta grows materially over historical norms.
+- Confirm final holdout quality with test ROC-AUC and track delta (`validation_auc - test_auc`).
 
 ## Cross-Validation Discussion
 Cross-validation is not yet implemented in code; current evaluation uses one stratified holdout.

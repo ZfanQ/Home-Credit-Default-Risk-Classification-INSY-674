@@ -46,9 +46,11 @@ class FeatureImportanceResponse(BaseModel):
 
 class MetadataResponse(BaseModel):
     trained_at_utc: str
-    validation_auc: float
+    test_auc: float | None
+    test_evaluated: bool
     scale_pos_weight: float
     train_rows: int
     valid_rows: int
+    test_rows: int
     feature_count: int
     categorical_feature_count: int

@@ -7,10 +7,11 @@ for each applicant so underwriting and pricing decisions can be risk-adjusted ra
 rule-based.
 
 ## Quantified Objective
-- Primary ML objective: maximize ROC-AUC on held-out validation data.
+- Primary ML objective: maximize ROC-AUC on held-out validation data during model selection and
+  report final ROC-AUC on a held-out test set.
 - Operational objective: improve ranking quality of risky applicants while keeping approval
   throughput stable.
-- Current reference validation ROC-AUC in this repository: `0.7881`
+- Current reference test ROC-AUC in this repository: `0.7858`
   (`artifacts/training_report.json`).
 
 ## Business Value Explanation
