@@ -2,6 +2,8 @@
 
 This project provides a production-ready FastAPI service for **Home Credit Default Risk** binary classification.
 
+Data link: https://www.kaggle.com/competitions/home-credit-default-risk/data
+
 ## What This Project Does
 - Predicts the probability of loan payment difficulty for each applicant.
 - Uses target definition:
