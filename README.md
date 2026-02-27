@@ -179,8 +179,7 @@ curl -s -X POST http://127.0.0.1:8000/predict \
       "AMT_INCOME_TOTAL": 180000,
       "AMT_CREDIT": 600000,
       "AMT_ANNUITY": 28000,
-      "DAYS_BIRTH": -13000,
-      "CODE_GENDER": "F"
+      "DAYS_BIRTH": -13000
     },
     "top_n": 5
   }'
@@ -192,8 +191,8 @@ curl -s -X POST http://127.0.0.1:8000/predict/batch \
   -H 'Content-Type: application/json' \
   -d '{
     "records": [
-      {"AMT_INCOME_TOTAL": 180000, "AMT_CREDIT": 600000, "CODE_GENDER": "F"},
-      {"AMT_INCOME_TOTAL": 120000, "AMT_CREDIT": 350000, "CODE_GENDER": "M"}
+      {"AMT_INCOME_TOTAL": 180000, "AMT_CREDIT": 600000},
+      {"AMT_INCOME_TOTAL": 120000, "AMT_CREDIT": 350000}
     ],
     "top_n": 3
   }'
