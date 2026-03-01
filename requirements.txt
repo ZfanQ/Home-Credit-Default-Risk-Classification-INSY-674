@@ -7,6 +7,7 @@ numpy>=2.3.0
 scikit-learn>=1.7.0
 lightgbm>=4.6.0
 joblib>=1.5.0
+matplotlib>=3.9.0
 
 # Optional developer tooling
 pytest>=8.4.0

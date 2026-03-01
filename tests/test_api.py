@@ -64,3 +64,34 @@ def test_api_predict_and_metadata(tmp_path: Path) -> None:
         body = response.json()
         assert 0.0 <= body["default_probability"] <= 1.0
         assert len(body["top_contributors"]) == 3
+
+
+def test_api_validation_errors_and_service_unavailable(tmp_path: Path) -> None:
+    artifact_path = build_bundle(tmp_path)
+    app = create_app(artifact_path=artifact_path)
+    with TestClient(app) as client:
+        invalid_top_n = client.post(
+            "/predict",
+            json={
+                "record": {
+                    "AMT_INCOME_TOTAL": 180000,
+                    "AMT_CREDIT": 600000,
+                },
+                "top_n": 999,
+            },
+        )
+        assert invalid_top_n.status_code == 422
+
+        empty_batch = client.post(
+            "/predict/batch",
+            json={
+                "records": [],
+                "top_n": 3,
+            },
+        )
+        assert empty_batch.status_code == 422
+
+    missing_artifact_app = create_app(artifact_path=tmp_path / "missing.joblib")
+    with TestClient(missing_artifact_app) as client:
+        metadata = client.get("/metadata")
+        assert metadata.status_code == 503

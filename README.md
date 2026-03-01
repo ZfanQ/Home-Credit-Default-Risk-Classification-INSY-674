@@ -97,6 +97,12 @@ make test
 ```
 What it does: runs `pytest`.
 
+5. Run the full local quality gate:
+```bash
+make lint && make typecheck && make test
+```
+What it does: mirrors the CI workflow checks.
+
 ## Training Commands
 1. Development training (no test evaluation):
 ```bash
@@ -106,6 +112,13 @@ What it does:
 - Loads and aggregates all Home Credit raw tables.
 - Trains LightGBM with AUC metric and class weighting.
 - Uses train/validation split for model selection.
+- Runs stratified cross-validation summary (configurable folds) and stores mean/std AUC.
+- Runs temporal holdout validation (most recent segment) for out-of-time robustness.
+- Optimizes decision threshold on validation data using configurable FP/FN business costs.
+- Computes PR-AUC and calibration diagnostics (Brier score + reliability bins).
+- Generates a cost-sensitivity table showing threshold shifts under different FN costs.
+- Generates subgroup performance tables (gender/contract/income/education/family-status) to expose performance gaps.
+- Computes score and feature distribution drift (PSI) between train vs validation/test.
 - Keeps the test split held out and does not compute test metrics.
 - Writes:
   - `artifacts/model_bundle.joblib`
@@ -130,8 +143,21 @@ Optional metadata argument:
 ```bash
 uv run train-homecredit --threshold 0.5
 ```
-What it does: stores decision-threshold metadata in `training_report.json` (does not change
-training objective).
+What it does: sets the default threshold reference used by threshold optimization reporting.
+
+Optional pipeline controls:
+```bash
+uv run train-homecredit --cv-folds 5 --optimize-threshold \
+  --false-positive-cost 1.0 --false-negative-cost 5.0
+```
+What it does: adjusts CV rigor and threshold policy optimization tradeoffs.
+
+Temporal and subgroup controls:
+```bash
+uv run train-homecredit --temporal-holdout-fraction 0.2 --temporal-max-estimators 600 \
+  --subgroup-min-size 500
+```
+What it does: tunes out-of-time validation strictness and subgroup report sample thresholds.
 
 ## Run API
 1. Start service:
@@ -215,10 +241,24 @@ docker run --rm -p 8000:8000 \
 ## Expected Outputs
 - `artifacts/model_bundle.joblib`: trained model + preprocessing bundle.
 - `artifacts/training_report.json`: metrics and metadata including class distribution,
-  split counts, hyperparameters, random seed, threshold, dependency snapshot, and
-  `test_evaluated` status.
+  split counts, hyperparameters, random seed, threshold, train/validation learning
+  curves, confusion matrices, cross-validation summary, threshold optimization trace,
+  policy simulation outputs, dependency snapshot, and `test_evaluated` status.
+- `artifacts/learning_curves.csv`: tabular train/validation AUC curve by boosting iteration.
+- `artifacts/validation_confusion_matrix.csv`: validation confusion matrix counts and rates.
+- `artifacts/train_calibration.csv`, `artifacts/validation_calibration.csv`,
+  `artifacts/test_calibration.csv`: calibration bins with predicted vs observed default rates.
+- `artifacts/cost_sensitivity.csv`: selected threshold and policy tradeoffs under multiple cost settings.
+- `artifacts/validation_subgroup_metrics.csv`, `artifacts/test_subgroup_metrics.csv`:
+  subgroup-level ROC/PR, recall/specificity, approval rates.
+- `artifacts/drift_summary.json`: PSI-based score/feature drift summary.
+- `artifacts/plots/train_validation_learning_curve.png`: visual train vs validation AUC graph.
+- `artifacts/plots/validation_confusion_matrix.png`: visual validation confusion matrix heatmap.
+- `artifacts/plots/*_calibration_curve.png`: train/validation/test reliability curves.
+- `artifacts/plots/cost_sensitivity_threshold_curve.png`: threshold response to cost-weight changes.
 
 ## Notes
 - Full training is compute and memory intensive.
 - Use sample training command during development.
 - Primary model selection metric is ROC-AUC.
+- CI runs `ruff`, `ty`, and `pytest` on every push and pull request.

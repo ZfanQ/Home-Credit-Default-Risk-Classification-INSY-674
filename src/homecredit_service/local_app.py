@@ -142,7 +142,7 @@ class LocalRiskApp(tk.Tk):
             darkcolor="#34A853",
         )
 
-    def _build_card(self, parent: tk.Widget) -> tk.Frame:
+    def _build_card(self, parent: tk.Misc) -> tuple[tk.Frame, tk.Frame]:
         """Helper to create a Material-style card with a crisp 1px border."""
         border_frame = tk.Frame(parent, bg=self.palette["border"])
         card_frame = tk.Frame(border_frame, bg=self.palette["panel"])

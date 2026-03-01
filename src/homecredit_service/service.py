@@ -36,13 +36,18 @@ class PredictionService:
     def predict(self, records: list[dict[str, Any]], top_n: int = 5) -> list[dict[str, Any]]:
         raw_input, transformed = prepare_inference_frame(records, self.bundle)
         model = self.bundle["model"]
-
-        proba_or_raw = model.predict_proba(transformed)
-        if isinstance(proba_or_raw, np.ndarray) and proba_or_raw.ndim == 2:
-            probabilities = proba_or_raw[:, 1]
-        else:
+        objective_name = self.bundle.get("hyperparameters", {}).get("objective")
+        uses_custom_objective = objective_name == "custom_focal_loss"
+        if uses_custom_objective:
             raw_scores = model.predict(transformed, raw_score=True)
             probabilities = 1.0 / (1.0 + np.exp(-raw_scores))
+        else:
+            proba_or_raw = model.predict_proba(transformed)
+            if isinstance(proba_or_raw, np.ndarray) and proba_or_raw.ndim == 2:
+                probabilities = proba_or_raw[:, 1]
+            else:
+                raw_scores = model.predict(transformed, raw_score=True)
+                probabilities = 1.0 / (1.0 + np.exp(-raw_scores))
         contributions = model.booster_.predict(transformed, pred_contrib=True)
         feature_names = transformed.columns.tolist()
 

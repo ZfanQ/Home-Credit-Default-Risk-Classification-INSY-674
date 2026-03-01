@@ -4,6 +4,7 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,7 +41,7 @@ def create_app(artifact_path: Path | None = None) -> FastAPI:
 
     app = FastAPI(title="Home Credit Default Risk API", version="1.0.0", lifespan=lifespan)
     app.add_middleware(
-        CORSMiddleware,
+        cast(Any, CORSMiddleware),
         allow_origins=["*"],
         allow_credentials=False,
         allow_methods=["*"],
